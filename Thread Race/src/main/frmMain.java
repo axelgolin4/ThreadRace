@@ -12,7 +12,7 @@ import javax.swing.JLabel;
 
 /**
  *
- * @author Miguel
+ * @author Axel
  */
 public class frmMain extends javax.swing.JFrame {
     
@@ -22,10 +22,13 @@ public class frmMain extends javax.swing.JFrame {
     Proceso hilo2;
     Proceso hilo3;
     // Región Crítica
-    int[] regionCritica = new int[3];
+    int[] region_critica = new int[3];
     int posicion = 0;
     // Semáforo para exclusión mutua
     private static Semaphore mutex = new Semaphore(1, true); // Controla el acceso a la región crítica
+    
+    // monitor
+    monitor Monitor = new monitor();
 
     /**
      * Creates new form frmMain
@@ -35,9 +38,9 @@ public class frmMain extends javax.swing.JFrame {
         this.hilo1 = new Proceso(lblNumeroHilo1);
         this.hilo2 = new Proceso(lblNumeroHilo2);
         this.hilo3 = new Proceso(lblNumeroHilo3);
-        regionCritica[0] = 0;
-        regionCritica[1] = 0;
-        regionCritica[2] = 0;
+        region_critica[0] = 0;
+        region_critica[1] = 0;
+        region_critica[2] = 0;
     }
     
     public class Proceso extends Thread {
@@ -61,13 +64,39 @@ public class frmMain extends javax.swing.JFrame {
             } catch (InterruptedException ex) {
                 Logger.getLogger(frmMain.class.getName()).log(Level.SEVERE, null, ex);
             }
-            regionCritica[posicion] = this.numeroAGenerar;
-            String contenidoRC = "[" + String.valueOf(regionCritica[0]) + "]";
-            contenidoRC += "[" + String.valueOf(regionCritica[1]) + "]";
-            contenidoRC += "[" + String.valueOf(regionCritica[2]) + "]";
+            region_critica[posicion] = this.numeroAGenerar;
+            String contenidoRC = "[" + String.valueOf(region_critica[0]) + "]";
+            contenidoRC += "[" + String.valueOf(region_critica[1]) + "]";
+            contenidoRC += "[" + String.valueOf(region_critica[2]) + "]";
             lblRegionCritica.setText(contenidoRC);
             posicion++;
             mutex.release(); // Libera región crítica
+            
+            Monitor.insertar(this.numeroAGenerar); //INSERTAR
+            // Operaciones post región crítica
+            System.out.println("Proceso finalizado con status: 0");
+        }
+    }
+    
+    //ZONA DEL MONITOR
+    public class monitor {
+        int[] region_critica = new int[3];
+        int a;
+        monitor() {
+            region_critica[0] = 0;
+            region_critica[1] = 0;
+            region_critica[2] = 0;
+            a = 0;
+        }
+        public synchronized void insertar(int numero) {
+            region_critica[a] = numero;
+            String prin = "[" + String.valueOf(region_critica[0]) + "]";
+            prin = prin +"[" + String.valueOf(region_critica[1]) + "]";
+            prin = prin + "[" + String.valueOf(region_critica[2]) + "]";
+            lblRegionCritica.setText(prin);
+            a++;
+            
+            
             // Operaciones post región crítica
             System.out.println("Proceso finalizado con status: 0");
         }
@@ -230,6 +259,7 @@ public class frmMain extends javax.swing.JFrame {
 
     private void btnPosicionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPosicionActionPerformed
         System.out.println("La posición actual libre para Región crítica es: " + posicion);
+        System.out.println("La posición actual libre para Región crítica es: " + Monitor.a);
     }//GEN-LAST:event_btnPosicionActionPerformed
 
     /**
